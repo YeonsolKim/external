@@ -431,6 +431,16 @@ overflow-wrap: break-word;
 word-break: normal;
 }
 
+.post-body li {
+text-align: justify;
+text-align-last: left;
+text-justify: inter-word;
+hyphens: auto;
+-webkit-hyphens: auto;
+overflow-wrap: break-word;
+word-break: normal;
+}
+
 /* Keep the pre-enhancement layout readable if JavaScript is unavailable. */
 .post-body > p {
 margin-top: 0 !important;
