@@ -487,7 +487,8 @@ margin-top: 1lh !important;
 }
 
 .post-body .post-explicit-entry-break,
-.post-body .post-structural-continuation {
+.post-body .post-structural-continuation,
+.post-body .post-math-continuation {
 display: none !important;
 }
 
@@ -525,6 +526,12 @@ text-indent: 0;
   [data-paragraph-continuation="structural"]
 ) {
 text-indent: 1em;
+}
+
+/* Prose that resumes after an adjacent $$…$$ block (single blank line in the
+   source) continues the same paragraph: no fresh-paragraph indent. */
+.post-body [data-paragraph-continuation="math"] {
+text-indent: 0 !important;
 }
 
 .post-body .qed {

@@ -4,6 +4,8 @@ module ExternalPostEntryBreaks
   MARKER = '<div class="post-explicit-entry-break" aria-hidden="true"></div>'.freeze
   STRUCTURAL_CONTINUATION_MARKER =
     '<div class="post-structural-continuation" aria-hidden="true"></div>'.freeze
+  MATH_CONTINUATION_MARKER =
+    '<div class="post-math-continuation" aria-hidden="true"></div>'.freeze
   ENVIRONMENT_END_MARKER = lambda do |kind|
     %(<div class="math-environment-end" data-environment-end="#{kind}" aria-hidden="true"></div>)
   end
@@ -18,6 +20,7 @@ module ExternalPostEntryBreaks
     blank_lines = []
     fence = nil
     math_block = nil
+    after_display_math = false
 
     content.each_line do |line|
       if fence
@@ -33,6 +36,7 @@ module ExternalPostEntryBreaks
         if closing_math_block?(line)
           append_environment_end_marker(output, display_environment_end_kind(math_block))
           math_block = nil
+          after_display_math = true
         end
 
         next
@@ -43,16 +47,18 @@ module ExternalPostEntryBreaks
         next
       end
 
-      append_blank_lines(output, blank_lines)
-      blank_lines.clear
-
       fence = opening_fence(line)
+
+      append_blank_lines(output, blank_lines, math_adjacent: after_display_math)
+      blank_lines.clear
+      after_display_math = false
 
       if !fence && opening_math_block?(line)
         output << line
 
         if closing_math_block?(line, 2)
           append_environment_end_marker(output, display_environment_end_kind(line))
+          after_display_math = true
         else
           math_block = line.dup
         end
@@ -101,11 +107,13 @@ module ExternalPostEntryBreaks
     end
   end
 
-  def append_blank_lines(output, blank_lines)
+  def append_blank_lines(output, blank_lines, math_adjacent: false)
     if blank_lines.length >= 3
       output << "\n#{MARKER}\n\n"
     elsif blank_lines.length == 2
       output << "\n#{STRUCTURAL_CONTINUATION_MARKER}\n\n"
+    elsif blank_lines.length == 1 && math_adjacent
+      output << "\n#{MATH_CONTINUATION_MARKER}\n\n"
     else
       output << blank_lines.join
     end

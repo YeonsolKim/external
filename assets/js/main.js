@@ -623,6 +623,41 @@
     return element.classList.contains('post-structural-continuation');
   }
 
+  function isMathContinuationMarker(element) {
+    return element.classList.contains('post-math-continuation');
+  }
+
+  // A lone blank line around a display-math block is authored as a paragraph
+  // break by kramdown, but semantically it is the same paragraph. The Ruby
+  // pre-render pass drops a `.post-math-continuation` marker there; flag the
+  // paragraph that resumes after it so it is not treated as a fresh paragraph
+  // (no first-line indent, no leading gap).
+  function bridgeMathContinuations(root) {
+    var markers = root.querySelectorAll('.post-math-continuation');
+
+    Array.prototype.forEach.call(markers, function (marker) {
+      var candidate = marker.nextElementSibling;
+
+      while (
+        candidate &&
+        (candidate.tagName === 'MJX-CONTAINER' ||
+          candidate.classList.contains('MathJax_Display') ||
+          isMathContinuationMarker(candidate))
+      ) {
+        candidate = candidate.nextElementSibling;
+      }
+
+      if (
+        candidate &&
+        candidate.tagName === 'P' &&
+        !readEntryDescriptor(candidate) &&
+        !candidate.getAttribute('data-paragraph-continuation')
+      ) {
+        candidate.setAttribute('data-paragraph-continuation', 'math');
+      }
+    });
+  }
+
   function environmentKindClass(kind) {
     return kind.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
@@ -762,7 +797,8 @@
 
       if (
         element.classList.contains('post-explicit-entry-break') ||
-        element.classList.contains('post-structural-continuation')
+        element.classList.contains('post-structural-continuation') ||
+        element.classList.contains('post-math-continuation')
       ) {
         return;
       }
@@ -787,6 +823,7 @@
 
     prepareParagraphUnits(postBody);
     groupMathEnvironments(postBody, { environmentNumber: 0 }, false);
+    bridgeMathContinuations(postBody);
     markSectionOpeningParagraphs(postBody);
     postBody.setAttribute('data-semantic-units', 'true');
   }
