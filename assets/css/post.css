@@ -345,6 +345,13 @@ white-space: nowrap;
 text-align: left;
 }
 
+/* MathJax display containers must stay centered even though .post-body li / p
+   set `text-align-last: left` for justified prose (it would otherwise inherit
+   in and left-align a single-line equation). */
+.post-body mjx-container[display="true"] {
+text-align-last: center;
+}
+
 .post-body li.list-item-display-math mjx-container[display="true"] > svg {
 margin-left: auto;
 margin-right: auto;
